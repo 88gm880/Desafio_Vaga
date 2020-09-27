@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Text.RegularExpressions;
 
 namespace Desafio_Vaga
 {
@@ -7,16 +8,38 @@ namespace Desafio_Vaga
     {
         static void Main(string[] args)
         {
-            
-            int initX, initY;
-            Horta horta = new Horta(10, 10);
-            horta.addCanteiro(4, 4);
-            horta.addCanteiro(0, 0);
-            horta.addCanteiro(0, 5);
-            //Console.Write("Posicao inicial\t: (");
-            //Console.ReadLine();
+            string[] numeros;
+            Console.Write("Digite respectivamente os tamanhos X e Y na mesma linha: ");//
+            numeros = Regex.Split(Console.ReadLine(), @"\D+");
+            int tamX = Int32.Parse(numeros[0]);
+            int tamY = Int32.Parse(numeros[1]);
 
-            Robo robo = new Robo(4, 4, 'L');
+            // nova horta
+            Horta horta = new Horta(tamX, tamY);
+
+            Console.Write("Posicao inicial\t\t: ");  // ex de entradas: 4 4 (5,1) ( 0 , 0 )
+            numeros = Regex.Split(Console.ReadLine(), @"\D+");
+            int initX = Int32.Parse(numeros[0]);
+            int initY = Int32.Parse(numeros[1]);
+
+            Console.Write("Orientacao inicial\t: "); // N L S O
+            char initDir =  Console.ReadLine().Trim().ToCharArray()[0];
+
+            Robo robo = new Robo(initX, initY, initDir);
+
+            horta.setRobo(robo);
+
+            do
+            {
+                Console.WriteLine("Mínimo de canteiros: 1");
+                Console.Write("Canteiros a irrigar: ");// ex de entradas: 4 4 (5,1) ( 0 , 0 )
+                numeros = Regex.Split(Console.ReadLine(), @"\D+");
+            } while (numeros.Length < 2);
+
+            for (int i = 0; i < numeros.Length -1; i+=2) // somente adicionará canteiros com X e Y, caso tenha qtd impar, ignora o ultimo n°
+            {
+                horta.addCanteiro(Int32.Parse(numeros[i]), Int32.Parse(numeros[i + 1]));
+            }
 
             foreach (Canteiro c in horta.getCanteiros())
             {
@@ -24,7 +47,7 @@ namespace Desafio_Vaga
             }
 
             Console.WriteLine(robo.getCaminho());
-            Console.WriteLine("Orientacao final: " + robo.getOrientacao());
+            Console.WriteLine("Orientacao final: {0}", robo.getOrientacao());
         }
 
     }
@@ -33,16 +56,32 @@ namespace Desafio_Vaga
     {
         private int x, y;
         private ArrayList canteiros = new ArrayList();
+        private Robo robo;
 
         public Horta(int x, int y)
         {
+            if(x < 0 || y < 0)
+            {
+                Console.WriteLine("Tamanho mínimo do canteiro é 1 x 1");
+                Environment.Exit(2);
+            }
             this.x = x;
             this.y = y;
         }
 
+        public void setRobo(Robo robo)
+        {
+            if (robo.getX() > this.x - 1 || robo.getY() > this.y - 1 || robo.getX() < 0 || robo.getY() < 0) //
+            {
+                Console.WriteLine("Robo em posição invalida");
+                Environment.Exit(2);
+            }
+            this.robo = robo;
+        }
+
         public void addCanteiro(int x, int y)
         {
-            if(x > this.x || y > this.y)
+            if(x > this.x - 1 || y > this.y - 1 || x < 0 || y < 0) //-1 pois o indice do canteiro começa em 0
             {
                 Console.WriteLine("Posicao de canteiro invalida");
                 return;
@@ -62,7 +101,7 @@ namespace Desafio_Vaga
         private char[] direcoes = { 'N', 'L', 'S', 'O' };
         private int direcao;
         private int x, y;
-        private String caminho = "Caminho: ";
+        private String caminho = "Caminho\t\t:";
 
         public Robo(int x, int y, char direcao)
         {
